@@ -1,0 +1,34 @@
+import pandas as pd
+import numpy as np
+car_data = pd.read_csv('./CarPrice_Assignment.csv')
+import tensorflow as tf
+car_data.drop(columns = ['car_ID','CarName'], inplace= True)
+
+car_data.dtypes
+final_car = pd.get_dummies(car_data, columns=['symboling','fueltype',	'aspiration',	'doornumber',	'carbody',	'drivewheel',	'enginelocation',	'enginetype',	'cylindernumber',	'fuelsystem'])
+np.random.seed(11111)
+msk = np.random.rand(len(final_car)) < 0.72
+train_total = final_car[msk]
+test_total = final_car[~msk]
+print(len(train_total))
+print(len(test_total))
+print(train_total.dtypes)
+train_label = train_total.loc[:,'price']
+test_label = test_total.loc[:,'price']
+mean_label = train_label.mean()
+train_label -= mean_label
+std_label = train_label.std()
+
+from keras import models
+from keras import layers
+def build_model(act):
+  model = models.Sequential()
+  model.add(layers.Dense(10, activation= act,input_shape=(train.shape[1],)))
+  model.add(layers.Dense(8, activation= act))
+  model.add(layers.Dense(6, activation= act))
+  model.add(layers.Dense(1))
+  model.compile(optimizer='rmsprop', loss='mse', metrics=['mae'])
+  return model
+train_label /= std_label
+test_label -= mean_label
+test_label /= std_label
