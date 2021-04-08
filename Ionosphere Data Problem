@@ -1,0 +1,106 @@
+
+import tensorflow as tf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras import layers, optimizers, regularizers, models
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+df = pd.read_csv('ionosphere_data.csv', delimiter=',')
+df.head(10)
+df.describe().T
+for feature in df:
+    print(feature)
+    print(len(df[feature].unique()))
+df['feature2'].unique()
+array([0])
+df.drop(df.columns[1], inplace=True, axis=1)
+df.head()
+df.info()
+df.isnull().sum()
+df.describe()
+df['label'] = [1 if lbl == 'g' else 0 for lbl in df['label']]
+train_data = df.sample(frac= 0.6, random_state=125)
+test_data = df.drop(train_data.index)
+train_label = train_data.iloc[:,-1]
+train_data = train_data.iloc[:,0:-1]
+test_label = test_data.iloc[:,-1]
+test_data = test_data.iloc[:,0:-1]
+train_data.head()
+train_label
+
+df.isnull().sum()
+train_data.shape
+test_data.shape
+train_label.shape
+
+test_label.shape
+
+train_label.sum()
+len(train_label)
+
+train_data = train_data.to_numpy()
+train_label = train_label.to_numpy().astype('float32')
+test_data = test_data.to_numpy()
+test_label = test_label.to_numpy().astype('float32')
+print(type(train_data))
+print(type(train_label))
+print(type(test_data))
+print(type(test_label))
+<class 'numpy.ndarray'>
+<class 'numpy.ndarray'>
+<class 'numpy.ndarray'>
+<class 'numpy.ndarray'>
+print(train_data.dtype)
+print(train_label.dtype)
+print(test_label.dtype)
+print(test_data.dtype)
+
+# Define model
+model = Sequential()
+model.add(Dense(64, activation='relu', input_shape=(train_data.shape[1],)))
+model.add(Dropout(0.2))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(1,  activation='sigmoid'))
+model.summary()
+Model: "sequential"
+model.compile(optimizer = 'RMSprop', loss='binary_crossentropy', metrics=['accuracy'])
+history = model.fit(train_data, train_label, validation_split=0.2, epochs=75, batch_size = 16)
+history.history.keys()
+dict_keys(['loss', 'accuracy', 'val_loss', 'val_accuracy'])
+history_dict = history.history
+loss_values = history_dict['loss']
+val_loss_values = history_dict['val_loss']
+
+epochs = range(75)
+plt.plot(epochs, loss_values, 'bo', label='Training loss')
+plt.plot(epochs, val_loss_values, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+acc_values = history_dict['accuracy']
+val_acc_values = history_dict['val_accuracy']
+plt.plot(epochs, acc_values, 'bo', label='Training acc')
+plt.plot(epochs, val_acc_values, 'b', label='Validation acc')
+plt.title('Training and validation accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+Evaluation Step
+Prediction
+score = model.evaluate(test_data, test_label)
+score
+predictions=model.predict(test_data)
+y_pred = (predictions > 0.5)
+tf.math.confusion_matrix(
+    test_label, y_pred, num_classes=2, weights=None, dtype=tf.dtypes.int32,
+    name=None
+)
+
+np.count_nonzero(y_pred)
