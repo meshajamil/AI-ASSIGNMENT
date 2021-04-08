@@ -1,0 +1,87 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras import layers, models, optimizers
+data=pd.read_csv("compresive_strength_concrete.csv")
+
+data.shape
+data.head()
+data.isnull().sum()
+np.where(data.applymap(lambda x: x == ''))
+(array([], dtype=int64), array([], dtype=int64))
+X_train = data.sample(frac = 0.7, random_state = 123)
+X_test = data.drop(X_train.index)
+X_train.head()
+
+Y_train = X_train.iloc[:,-1]
+X_train = X_train.iloc[:,0:-1]
+Y_test = X_test.iloc[:,-1]
+X_test = X_test.iloc[:,0:-1]
+X_mean = X_train.mean()
+X_train -= X_mean
+X_std = X_train.std()
+X_train /= X_std
+X_test -= X_mean
+X_test /= X_std
+Y_mean = Y_train.mean()
+Y_train -= Y_mean
+Y_std = Y_train.std()
+Y_train /= Y_std
+Y_test -= Y_mean
+Y_test /= Y_std
+X_train.dtypes
+X_train = X_train.to_numpy()
+Y_train = Y_train.to_numpy()
+X_test = X_test.to_numpy()
+Y_test = Y_test.to_numpy()
+network = models.Sequential()
+network.add(layers.Dense(128,activation="relu",input_shape=(X_train.shape[1],)))
+network.add(layers.Dense(64,activation="relu"))
+network.add(layers.Dense(32,activation="relu"))
+network.add(layers.Dense(1))
+network.compile(optimizer="rmsprop",loss=["mse"],metrics=["mae"])
+history = network.fit(X_train,Y_train,epochs=200,validation_split=0.3, batch_size = 16)
+history.history.keys()
+dict_keys(['loss', 'mae', 'val_loss', 'val_mae'])
+loss,mae=network.evaluate(X_test,Y_test)
+
+val_mae = history.history['val_mae']
+val_loss = history.history['val_loss']
+import matplotlib.pyplot as plt 
+history_dict = history.history
+loss_values = history_dict['loss']
+val_loss_values = history_dict['val_loss']
+epochs = range(200)
+plt.plot(epochs, loss_values, 'bo', label='Training loss')
+plt.plot(epochs, val_loss_values, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+import matplotlib.pyplot as plt 
+acc_values = history_dict['mae']
+val_acc_values = history_dict['val_mae']
+plt.plot(epochs, acc_values, 'bo', label='Training mae')
+plt.plot(epochs, val_acc_values, 'b', label='Validation mae')
+plt.title('Training and validation accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('mae')
+plt.legend()
+plt.show()
+y_pred = network.predict(X_test)
+def denorm(x):
+    return (x * Y_std) + Y_mean
+y_pred = denorm(y_pred)
+y_true = denorm(Y_test)
+y_pred = y_pred.flatten()
+y_pred.shape
+y_true.shape
+import matplotlib.pyplot as plt
+coef = np.polyfit(y_true,y_pred,1)
+poly1d_fn = np.poly1d(coef) 
+
+plt.plot(y_true,y_pred, 'yo', y_true, poly1d_fn(y_true), '--k')
+plt.xlim(0, 100)
+plt.ylim(0, 100)
